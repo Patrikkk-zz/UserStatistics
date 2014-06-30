@@ -36,8 +36,8 @@ namespace UserStatistics
                     if (Utils.IsSafe(info, count)) continue;
 
                     // So... it has come to this.
-                    Log("Purging user \"{0}\" (ID {1}): IP = {2}, Group = {3}, Registered {4}, Last Login {5}, Total Time = {6}"
-                        .SFormat(count.Name, count.ID, count.Address, count.Group, info.RegisterTime.ToDisplayString(),
+                    Log("Purging user \"{0}\" (ID {1}):  Group = {2}, Registered {3}, Last Login {4}, Total Time = {5}"
+                        .SFormat(count.Name, count.ID, count.Group, info.RegisterTime.ToDisplayString(),
                         info.LastLogin.ToDisplayString(), info.TotalTime.ToDisplayString()));
                     TShock.Users.RemoveUser(count);
                     Database.DelSQL(info.UserID);

@@ -6,11 +6,12 @@ using System.Text;
 using TShockAPI.DB;
 using TShockAPI;
 using Terraria;
-using Hooks;
+using TShockAPI.Hooks;
+using TerrariaApi.Server;
 
 namespace UserStatistics
 {
-    [APIVersion(1,12)]
+    [ApiVersion(1,16)]
     public class PlugMain : TerrariaPlugin
     {
         #region Properties
@@ -43,9 +44,10 @@ namespace UserStatistics
             Database.SetupDB();
             Utils.InitializeLog();
 
-            GameHooks.Update += OnUpdate;
-            NetHooks.GreetPlayer += OnGr;
-            ServerHooks.Leave += OnLeave;
+            ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
+            ServerApi.Hooks.NetGreetPlayer.Register(this, OnGr);
+            ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
+
 
             #region StartupPurge Settings
             if (Utils.Config.PurgeOnStartup)
@@ -82,9 +84,9 @@ namespace UserStatistics
         {
             if (disposing)
             {
-                GameHooks.Update -= OnUpdate;
-                ServerHooks.Leave -= OnLeave;
-                NetHooks.GreetPlayer -= OnGr;
+                ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);
+                ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
+                ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGr);
                 SaveDatabase();
             }
             base.Dispose(disposing);
@@ -100,18 +102,18 @@ namespace UserStatistics
 
         #region Hooks
 
-        private void OnGr(int who, HandledEventArgs e)
+        private void OnGr(GreetPlayerEventArgs e)
         {
-            StatPlayers[who] = new StatPlayer(TShock.Players[who]);
+            StatPlayers[e.Who] = new StatPlayer(TShock.Players[e.Who]);
             // Login and stuff handled in constructor.
         }
-        private void OnLeave(int who)
+        private void OnLeave(LeaveEventArgs e)
         {
             // Dayum, that exception happened.
-            if (StatPlayers[who] != null) StatPlayers[who].LogOut();
-            StatPlayers[who] = null;
+            if (StatPlayers[e.Who] != null) StatPlayers[e.Who].LogOut();
+            StatPlayers[e.Who] = null;
         }
-        private void OnUpdate()
+        private void OnUpdate(EventArgs args)
         {
             #region Refresh Login Stuff
             if ((DateTime.Now - LastRefresh).Seconds >= 2)
